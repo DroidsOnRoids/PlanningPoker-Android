@@ -6,8 +6,9 @@ public class Client {
     private String mStoryPoints;
     private String mEndpointId;
 
-    public Client(final String name) {
+    public Client(final String endpointId, final String name) {
         mName = name;
+        mEndpointId = endpointId;
     }
 
     public String getName() {

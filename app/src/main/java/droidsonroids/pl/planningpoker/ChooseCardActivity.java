@@ -17,6 +17,9 @@ public class ChooseCardActivity extends AppCompatActivity implements GoogleNearb
 
     private FragmentPagerAdapter mPagerAdapter;
     private PokerViewPager mViewPager;
+    private Host mHost;
+    private String mClientName;
+    private GoogleNearbyService mGoogleNearbyService;
 
     public static Intent getStartIntent(final Context context, final Host host, final String clientName) {
         Intent intent = new Intent(context, ChooseCardActivity.class);
@@ -29,29 +32,33 @@ public class ChooseCardActivity extends AppCompatActivity implements GoogleNearb
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_choose_card);
-        final Host host = (Host) getIntent().getExtras().getSerializable(EXTRA_HOST);
-        getSupportActionBar().setTitle(host.getEndpointName());
+
+        final Bundle extras = getIntent().getExtras();
+        mHost = (Host) extras.getSerializable(EXTRA_HOST);
+        mClientName = extras.getString(EXTRA_CLIENT_NAME);
+
+        getSupportActionBar().setTitle(mHost.getEndpointName());
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         mViewPager = (PokerViewPager) findViewById(R.id.card_view_pager);
         mPagerAdapter = new CardPagerAdapter(getSupportFragmentManager());
         mViewPager = (PokerViewPager) findViewById(R.id.card_view_pager);
         mViewPager.setAdapter(mPagerAdapter);
+
+        mGoogleNearbyService = new GoogleNearbyService();
+        mGoogleNearbyService.initialize(this);
     }
 
     @Override
     protected void onStart() {
         super.onStart();
         EventBus.getDefault().register(this);
-        final Bundle extras = getIntent().getExtras();
-        final Host host = (Host) extras.getSerializable(EXTRA_HOST);
-        final String clientName = extras.getString(EXTRA_CLIENT_NAME);
-        GoogleNearbyService.getInstance().connectTo(host, clientName, this);
+        mGoogleNearbyService.connectTo(mHost, mClientName, this);
     }
 
     @Override
     protected void onStop() {
         EventBus.getDefault().unregister(this);
-        GoogleNearbyService.getInstance().disconnect();
+        mGoogleNearbyService.disconnect();
         super.onStop();
     }
 
@@ -59,6 +66,7 @@ public class ChooseCardActivity extends AppCompatActivity implements GoogleNearb
     public void onEvent(CardClickedEvent event) {
         System.out.println("CLICKED");
         mViewPager.setPagingEnabled(false);
+        GoogleNearbyService.getInstance().sendCardSelectedMessage(mHost.getEndpointId(), event.getCardText());
     }
 
     @Override
@@ -82,5 +90,10 @@ public class ChooseCardActivity extends AppCompatActivity implements GoogleNearb
     public void onConnectionError() {
         Toast.makeText(getApplicationContext(), "Cannot connect to host...", Toast.LENGTH_LONG).show();
         finish();
+    }
+
+    @Override
+    public void onFlipCard() {
+        EventBus.getDefault().post(new FlipCardEvent());
     }
 }

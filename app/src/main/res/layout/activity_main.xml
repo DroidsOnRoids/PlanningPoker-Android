@@ -9,7 +9,7 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     android:orientation="vertical"
-    tools:context="droidsonroids.pl.planningpoker.MainActivity">
+    tools:context=".DiscoverHostActivity">
 
     <EditText
         android:id="@+id/edit_name"
@@ -26,6 +26,7 @@
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/create"/>
+        android:text="@string/create"
+        android:onClick="onCreateClick"/>
 
 </LinearLayout>

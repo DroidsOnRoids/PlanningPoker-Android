@@ -7,6 +7,6 @@ public class PlanningPokerApplication extends Application {
     public void onCreate() {
         super.onCreate();
 
-        GoogleNearbyService.getInstance().initialize(this);
+        //GoogleNearbyService.getInstance().initialize(this);
     }
 }

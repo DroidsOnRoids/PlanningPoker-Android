@@ -8,17 +8,17 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
-public class HostAdapter  extends RecyclerView.Adapter<HostAdapter.ViewHolder> {
+public class DiscoverHostAdapter extends RecyclerView.Adapter<DiscoverHostAdapter.ViewHolder> {
 
     private final OnHostClickListener mOnHostClickListener;
     private List<Host> mHostList = new ArrayList<>();
 
-    public HostAdapter(final OnHostClickListener onHostClickListener) {
+    public DiscoverHostAdapter(final OnHostClickListener onHostClickListener) {
         mOnHostClickListener = onHostClickListener;
     }
 
     @Override
-    public HostAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public DiscoverHostAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.host_name_item, parent, false);
         return new ViewHolder(view);
     }

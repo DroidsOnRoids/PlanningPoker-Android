@@ -14,6 +14,7 @@ import com.google.android.gms.nearby.connection.AppIdentifier;
 import com.google.android.gms.nearby.connection.AppMetadata;
 import com.google.android.gms.nearby.connection.Connections;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class GoogleNearbyService implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, Connections.MessageListener,
@@ -44,6 +45,10 @@ public class GoogleNearbyService implements GoogleApiClient.ConnectionCallbacks,
     private Host mHost;
     private String mClientName;
 
+    private enum Message {
+        CARD_SELECTED, FLIP_CARDS
+    }
+
     public static GoogleNearbyService getInstance() {
         if (INSTANCE == null) {
             synchronized (GoogleNearbyService.class) {
@@ -70,12 +75,12 @@ public class GoogleNearbyService implements GoogleApiClient.ConnectionCallbacks,
 
     @Override
     public void onConnected(final Bundle bundle) {
-        if (mNearbyDiscoveryCallback != null) {
+        if (mNearbyHostCallback != null) {
+            startAdvertisingAfterConnectionEstablished();
+        } else if (mNearbyDiscoveryCallback != null) {
             startDiscoveryAfterConnectionEstablished();
         } else if (mNearbyClientCallback != null) {
             connectToAfterEstablished();
-        } else if (mNearbyHostCallback != null) {
-            startAdvertisingAfterConnectionEstablished();
         }
     }
 
@@ -90,6 +95,11 @@ public class GoogleNearbyService implements GoogleApiClient.ConnectionCallbacks,
     }
 
     public void disconnect() {
+        if (mIsHost) {
+            Nearby.Connections.stopAdvertising(mGoogleApiClient);
+        }
+
+
         if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
             mGoogleApiClient.disconnect();
         }
@@ -178,7 +188,7 @@ public class GoogleNearbyService implements GoogleApiClient.ConnectionCallbacks,
     }
 
     private void connectToAfterEstablished() {
-        Nearby.Connections.sendConnectionRequest(mGoogleApiClient, mClientName,mHost.getEndpointId(), null,
+        Nearby.Connections.sendConnectionRequest(mGoogleApiClient, mClientName, mHost.getEndpointId(), null,
                 new Connections.ConnectionResponseCallback() {
                     @Override
                     public void onConnectionResponse(String remoteEndpointId, Status status,
@@ -204,7 +214,7 @@ public class GoogleNearbyService implements GoogleApiClient.ConnectionCallbacks,
     }
 
     @Override
-    public void onConnectionRequest(final String remoteEndpointId, String remoteDeviceId, final String remoteEndpointName, final byte[] payload) {
+    public void onConnectionRequest(final String remoteEndpointId, final String cliendId, final String clientName, final byte[] payload) {
         if (mIsHost) {
             Nearby.Connections
                     .acceptConnectionRequest(mGoogleApiClient, remoteEndpointId, payload, this)
@@ -216,7 +226,7 @@ public class GoogleNearbyService implements GoogleApiClient.ConnectionCallbacks,
                             }
 
                             if (status.isSuccess()) {
-                                mNearbyHostCallback.onConnectionAccepted(remoteEndpointName);
+                                mNearbyHostCallback.onConnectionAccepted(new Client(cliendId, clientName));
                             } else {
                                 int statusCode = status.getStatusCode();
                                 mNearbyHostCallback.onConnectionFailed(statusCode);
@@ -226,6 +236,16 @@ public class GoogleNearbyService implements GoogleApiClient.ConnectionCallbacks,
         } else {
             Nearby.Connections.rejectConnectionRequest(mGoogleApiClient, remoteEndpointId);
         }
+    }
+
+    public void sendCardSelectedMessage(final String hostId, final String cardText) {
+        final String message = Message.CARD_SELECTED + "|" + cardText;
+        Nearby.Connections.sendReliableMessage(mGoogleApiClient, hostId, message.getBytes());
+    }
+
+    public void sendFlipCardsMessage(final String clientId) {
+        final String message = Message.FLIP_CARDS.toString();
+        Nearby.Connections.sendReliableMessage(mGoogleApiClient, clientId, message.getBytes());
     }
 
     @Override
@@ -243,14 +263,29 @@ public class GoogleNearbyService implements GoogleApiClient.ConnectionCallbacks,
     }
 
     @Override
-    public void onMessageReceived(final String s, final byte[] bytes, final boolean b) {
-
+    public void onMessageReceived(String endpointId, byte[] payload, boolean isReliable) {
+        final String[] data = Arrays.toString(payload).split("|");
+        final Message messageType = Message.valueOf(data[0]);
+        switch (messageType) {
+            case CARD_SELECTED:
+                final String cardText = data[1];
+                if (mNearbyHostCallback != null) {
+                    mNearbyHostCallback.onCardSelected(endpointId, cardText);
+                }
+                break;
+            case FLIP_CARDS:
+                if (mNearbyClientCallback != null) {
+                    mNearbyClientCallback.onFlipCard();
+                }
+                break;
+        }
     }
 
     @Override
     public void onDisconnected(final String endpointId) {
         mNearbyHostCallback = null;
         mNearbyDiscoveryCallback = null;
+        mNearbyClientCallback = null;
     }
 
     public interface NearbyHostCallback {
@@ -258,9 +293,11 @@ public class GoogleNearbyService implements GoogleApiClient.ConnectionCallbacks,
 
         void onAdvertisingFailed(final int statusCode);
 
-        void onConnectionAccepted(final String clientName);
+        void onConnectionAccepted(final Client client);
 
         void onConnectionFailed(final int statusCode);
+
+        void onCardSelected(final String clientId, final String cardText);
     }
 
     public interface NearbyDiscoveryCallback {
@@ -277,5 +314,7 @@ public class GoogleNearbyService implements GoogleApiClient.ConnectionCallbacks,
         void onConnectionSuccess();
 
         void onConnectionError();
+
+        void onFlipCard();
     }
 }

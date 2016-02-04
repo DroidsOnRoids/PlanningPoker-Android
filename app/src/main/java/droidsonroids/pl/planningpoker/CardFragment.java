@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 
 public class CardFragment extends Fragment {
 
@@ -32,13 +33,11 @@ public class CardFragment extends Fragment {
         return fragment;
     }
 
-
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
         mCardType = getArguments().getString(ARG_CARD_TYPE);
-        View v =  inflater.inflate(R.layout.fragment_card_fargment, container, false);
+        View v = inflater.inflate(R.layout.fragment_card_fargment, container, false);
         mCardFaceLayout = v.findViewById(R.id.card_front);
         mCardBackLayout = v.findViewById(R.id.card_back);
 
@@ -48,7 +47,7 @@ public class CardFragment extends Fragment {
             @Override
             public boolean onLongClick(final View v) {
                 if (!isBackVisible) {
-                    EventBus.getDefault().post(new CardClickedEvent());
+                    EventBus.getDefault().post(new CardClickedEvent(mCardType));
                 }
                 return true;
             }
@@ -58,7 +57,6 @@ public class CardFragment extends Fragment {
             @Override
             public void onClick(final View v) {
                 flipCard();
-
             }
         });
         TextView cardTypeTextView = (TextView) v.findViewById(R.id.card_type_text_view);
@@ -66,16 +64,29 @@ public class CardFragment extends Fragment {
         return v;
     }
 
-    private void flipCard()
-    {
-        if(!isBackVisible){
+    @Override
+    public void onStart() {
+        super.onStart();
+        if (isBackVisible) {
+            flipCard();
+        }
+        EventBus.getDefault().register(this);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        EventBus.getDefault().unregister(this);
+    }
+
+    private void flipCard() {
+        if (!isBackVisible) {
             mSetRightOut.setTarget(mCardFaceLayout);
             mSetLeftIn.setTarget(mCardBackLayout);
             mSetRightOut.start();
             mSetLeftIn.start();
             isBackVisible = true;
-        }
-        else{
+        } else {
             mSetRightOut.setTarget(mCardBackLayout);
             mSetLeftIn.setTarget(mCardFaceLayout);
             mSetRightOut.start();
@@ -84,8 +95,9 @@ public class CardFragment extends Fragment {
         }
     }
 
-
-    public String getCardType() {
-        return mCardType;
+    @SuppressWarnings("unused")
+    @Subscribe
+    public void onEvent(final FlipCardEvent event) {
+        flipCard();
     }
 }
