@@ -5,12 +5,12 @@
     android:layout_height="match_parent"
     tools:context="droidsonroids.pl.planningpoker.ChooseCardActivity">
 
-    <android.support.v4.view.ViewPager
+    <droidsonroids.pl.planningpoker.PokerViewPager
         android:id="@+id/card_view_pager"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-    </android.support.v4.view.ViewPager>
+    </droidsonroids.pl.planningpoker.PokerViewPager>
 
 
 </RelativeLayout>

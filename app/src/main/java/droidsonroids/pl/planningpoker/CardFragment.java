@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import org.greenrobot.eventbus.EventBus;
 
 public class CardFragment extends Fragment {
 
@@ -31,6 +32,12 @@ public class CardFragment extends Fragment {
             Bundle savedInstanceState) {
         mCardType = getArguments().getString(ARG_CARD_TYPE);
         View v =  inflater.inflate(R.layout.fragment_card_fargment, container, false);
+        v.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(final View v) {
+                EventBus.getDefault().post(new CardClickedEvent());
+            }
+        });
         TextView cardTypeTextView = (TextView) v.findViewById(R.id.card_type_text_view);
         cardTypeTextView.setText(mCardType);
         return v;
