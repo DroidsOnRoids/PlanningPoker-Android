@@ -8,4 +8,8 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="CardViewStyle" parent="CardView">
+        <item name="cardCornerRadius">16dp</item>
+    </style>
+
 </resources>
