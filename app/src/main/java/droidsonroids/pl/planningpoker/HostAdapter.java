@@ -10,29 +10,55 @@ import java.util.List;
 
 public class HostAdapter  extends RecyclerView.Adapter<HostAdapter.ViewHolder> {
 
-    List<String> hostList = new ArrayList();
+    private final OnHostClickListener mOnHostClickListener;
+    private List<Host> mHostList = new ArrayList<>();
 
-    public void addHost(String host) {
-        hostList.add(host);
-        notifyDataSetChanged();
+    public HostAdapter(final OnHostClickListener onHostClickListener) {
+        mOnHostClickListener = onHostClickListener;
     }
-
 
     @Override
     public HostAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.host_name_item, parent, false);
-       return new ViewHolder(v);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.host_name_item, parent, false);
+        return new ViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
-        holder.mTextView.setText(hostList.get(position));
-
+    public void onBindViewHolder(ViewHolder holder, final int position) {
+        holder.mTextView.setText(mHostList.get(position).getEndpointName());
+        holder.mTextView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(final View v) {
+                mOnHostClickListener.onHostClick(mHostList.get(position));
+            }
+        });
     }
 
     @Override
     public int getItemCount() {
-        return hostList.size();
+        return mHostList.size();
+    }
+
+    public void addHost(final String endpointId, final String endpointName) {
+        for (Host host : mHostList) {
+            if (host.getEndpointId().equals(endpointId)) {
+                return;
+            }
+        }
+
+        mHostList.add(0, new Host(endpointId, endpointName));
+        notifyItemInserted(0);
+    }
+    public void removeHost(String endpointId) {
+        for (int i = 0; i < mHostList.size(); i++) {
+            final Host host = mHostList.get(i);
+
+            if(host.getEndpointId().equals(endpointId)) {
+                mHostList.remove(host);
+                notifyItemRemoved(i);
+                return;
+            }
+        }
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
@@ -41,5 +67,9 @@ public class HostAdapter  extends RecyclerView.Adapter<HostAdapter.ViewHolder> {
             super(v);
             mTextView = (TextView) v.findViewById(R.id.host_name_text_view);
         }
+    }
+
+    public interface OnHostClickListener {
+        void onHostClick(final Host host);
     }
 }

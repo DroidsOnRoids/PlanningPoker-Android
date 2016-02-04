@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/PlanningPoker.iml" filepath="$PROJECT_DIR$/PlanningPoker.iml" />
+      <module fileurl="file://$PROJECT_DIR$/PlanningPoker-Android.iml" filepath="$PROJECT_DIR$/PlanningPoker-Android.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>
